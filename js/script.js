@@ -5,8 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const cart = document.querySelector('.cart')
   const cardWrapper = document.querySelector('.goods-wrapper')
   const cartClose = document.querySelector('.cart-close')
-
-  const createCardGoods = (id, title, price, img) => {
+  const category = document.querySelector('.category')
+  
+  const createCardProducts = (id, title, price, img) => {
     const card = document.createElement('div')
     card.className = 'card-wrapper col-12 cold-md-6 col-lg-4 col-xl-3 pb-3'
     card.innerHTML = `								
@@ -28,32 +29,75 @@ document.addEventListener('DOMContentLoaded', function() {
     `
     return card
   }
-  cardWrapper.appendChild(createCardGoods(1, 'Дартс', 2000, './img/temp/Archer.jpg'))
-  cardWrapper.appendChild(createCardGoods(2, 'Фламинго', 3000, './img/temp/Flamingo.jpg'))
-  cardWrapper.appendChild(createCardGoods(3, 'Носки', 5000, './img/temp/Socks.jpg'))
+
+  const createLoading = () => {
+    const loading = document.createElement('div')
+    loading.className = 'loadingio-spinner-double-ring-cd7z5ok85b loading'
+    loading.innerHTML = `
+      <div class="ldio-btjiv4plf2">
+        <div></div>
+        <div></div>
+        <div>
+          <div></div>
+        </div>
+        <div>
+          <div></div>
+        </div>
+      </div>
+    `
+    return loading
+  }
+
+  const getProducts = (item, filter) => { 
+    setTimeout(() => fetch('db/db.json')
+      .then(res => {
+        return res.json()
+      })
+      .then(filter)
+      .then(item), 1000
+    )
+  }
+
+  const renderCard = (items) => {
+    cardWrapper.textContent = ''
+    items.forEach(({id, title, price, imgMin}) => {
+        cardWrapper.append ( 
+          createCardProducts(id, title, price, imgMin)
+        )
+    })
+  }
 
   const closeCart = (event) => {
     const target = event.target
-    if(target === cart || target === cartClose) {
+    if(target === cart || target === cartClose || event.keyCode === 27) {
       cart.style.display = ''
+      window.removeEventListener('keyup', closeCart)
     }
   }
+
   const openCart = (e) => {
     cart.style.display = 'flex'
     e.preventDefault()
-
+    window.addEventListener('keyup', closeCart)
   }
 
-  const esc = (e) => {
-    const key = e.key
-    if(key === "Escape") {
-      if(cart.style.display === 'flex') {
-        cart.style.display = 'none'
-      }
+  const randomSort = (item) => {
+    return item.sort(() => Math.random() - 0.5)
+  }
+
+  const changeCategory = (event) => {
+    event.preventDefault()
+    const target = event.target
+    if(target.classList.contains('category-item')) {
+      const category = target.dataset.category
+      getProducts(renderCard, item => item.filter(i => i.category.includes(category)))
     }
   }
-
+  
   cartBtn.addEventListener('click', openCart)
   cart.addEventListener('click', closeCart)
-  window.addEventListener('keydown', esc)  
+  category.addEventListener('click', changeCategory)
+  cardWrapper.append(createLoading())
+  getProducts(renderCard, randomSort)
+
 })
